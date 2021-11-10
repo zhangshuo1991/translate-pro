@@ -1,7 +1,7 @@
 {
   "name": "vite-electron-app-test",
-  "author": "BroJenuel",
-  "version": "0.0.0",
+  "author": "zhangshuo",
+  "version": "0.1.0",
   "main": "electron/electron.js",
   "licence": "MIT",
   "scripts": {
@@ -18,7 +18,7 @@
   "build": {
     "appId": "com.my-website.my-app",
     "productName": "MyApp",
-    "copyright": "Copyright © 2019 ${author}",
+    "copyright": "Copyright © 2021 ${author}",
     "mac": {
       "category": "public.app-category.utilities"
     },
@@ -28,7 +28,8 @@
     },
     "files": [
       "dist/**/*",
-      "electron/**/*"
+      "electron/**/*",
+      "dist_electron/**/*"
     ],
     "directories": {
       "buildResources": "assets",
@@ -38,10 +39,12 @@
   "dependencies": {
     "@element-plus/icons": "0.0.11",
     "axios": "^0.22.0",
+    "dayjs": "^1.10.7",
+    "dexie": "^3.0.3",
     "element-plus": "^1.1.0-beta.9",
     "vue": "^3.2.6",
-    "vue-clipboard2": "^0.3.3",
-    "vue-clipboard3": "^1.0.1"
+    "vue-clipboard3": "^1.0.1",
+    "vue-resize-observer": "^2.0.15"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^1.6.0",

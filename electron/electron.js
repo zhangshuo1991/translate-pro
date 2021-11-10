@@ -1,6 +1,6 @@
 // electron/electron.js
 const path = require('path');
-const { app, BrowserWindow,Menu,dialog } = require('electron');
+const { app, BrowserWindow,Menu,dialog,globalShortcut } = require('electron');
 
 const isDev = process.env.IS_DEV == "true" ? true : false;
 
@@ -12,8 +12,35 @@ function createWindow() {
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: true,
+            contextIsolation: false,
+            spellcheck: true
         },
     });
+
+    mainWindow.on('focus', () => {
+        // mac下快捷键失效的问题
+        if (process.platform === 'darwin') {
+            let contents = mainWindow.webContents
+            globalShortcut.register('CommandOrControl+C', () => {
+                contents.copy()
+            })
+            globalShortcut.register('CommandOrControl+V', () => {
+                contents.paste()
+            })
+            globalShortcut.register('CommandOrControl+X', () => {
+                contents.cut()
+            })
+            globalShortcut.register('CommandOrControl+A', () => {
+                contents.selectAll()
+            })
+            globalShortcut.register('CommandOrControl+Z', () => {
+                contents.goBack()
+            })
+        }
+    })
+    mainWindow.on('blur', () => {
+        globalShortcut.unregisterAll() // 注销键盘事件
+    })
 
     // and load the index.html of the app.
     // win.loadFile("index.html");
@@ -22,12 +49,16 @@ function createWindow() {
             ? 'http://localhost:3000'
             : `file://${path.join(__dirname, '../dist/index.html')}`
     );
+
     // Open the DevTools.
     if (isDev) {
         mainWindow.webContents.openDevTools();
     }
+    return mainWindow
 }
-
+function testBody() {
+    console.log('testBody')
+}
 app.commandLine.appendSwitch('disable-web-security');
 
 // This method will be called when Electron has finished
@@ -37,7 +68,45 @@ app.whenReady().then(() => {
     // if(process.platform === 'darwin'){
     //     app.dock.setMenu(dockMenu)
     // }
-    createWindow()
+    const window=createWindow()
+    const menuBar = [
+        {
+            label: '文件',
+            submenu: [
+                {
+                    label: 'About Translate Pro',
+                    click:  () => {
+                        dialog.showMessageBox({
+                            message: '这是我开发的一个桌面程序'
+                        })
+                    }
+                }
+            ],
+        },
+        {
+            label: '操作',
+            submenu: [
+                {
+                    label: '收藏',
+                    accelerator: 'CmdOrCtrl+Shift+C',
+                    click: () => {
+                        window.webContents.send('send-message-to-render-test', '这是主进程的主动搭讪')
+                    }
+                },
+                {
+                    label: '字体设置',
+                    accelerator: 'CmdOrCtrl+Shift+I',
+                    click: () => {
+                        window.webContents.send('send-message-font', '这是主进程的主动搭讪')
+                    }
+                }
+            ]
+        }
+    ];
+// 构建菜单项
+   const menu = Menu.buildFromTemplate(menuBar);
+// 设置一个顶部菜单栏
+    Menu.setApplicationMenu(menu);
     app.on('activate', function () {
         // On macOS it's common to re-create a window in the app when the
         // dock icon is clicked and there are no other windows open.

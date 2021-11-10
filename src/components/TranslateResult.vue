@@ -27,15 +27,22 @@
     </el-select>
   </div>
   <div>
-    <el-card shadow="hover" style="width: 100%;height: 100px">
-      <span v-if="translate_result!== ''" style="font-weight: bolder;font-size: 20px">{{translate_result}}</span>
-      <span v-else style="font-size: 14px;color: #888887">翻译结果展示</span>
-      <div style="text-align: right;position: relative;top: 15px;left: 10px">
-        <el-button type="text" size="medium" @click="onCopy" icon="el-icon-document-copy" style="font-size: 20px"></el-button>
-        <el-button type="text" size="medium" @click="removeThis" icon="el-icon-document-remove" style="font-size: 20px;color: red"></el-button>
-        <el-button type="text" size="medium" @click="collect" icon="el-icon-star-off" style="font-size: 20px;color: #E6A23C"></el-button>
-      </div>
-    </el-card>
+    <div shadow="hover">
+      <el-input
+          type="textarea"
+          placeholder="翻译结果展示"
+          v-model="translate_result"
+          readonly
+          :input-style="{fontSize: '20px',fontWeight:'bolder',textAlign: 'center'}"
+          :autosize="{ minRows: 4, maxRows: 7}"
+      >
+      </el-input>
+    </div>
+    <div style="text-align: right;">
+      <el-button type="text" size="medium" @click="onCopy" icon="el-icon-document-copy" style="font-size: 20px"></el-button>
+      <el-button type="text" size="medium" @click="removeThis" icon="el-icon-document-remove" style="font-size: 20px;color: red"></el-button>
+      <el-button type="text" size="medium" @click="collect" icon="el-icon-star-off" style="font-size: 20px;color: #E6A23C"></el-button>
+    </div>
   </div>
 </template>
 
@@ -44,6 +51,7 @@ import axios from 'axios'
 import useClipboard from 'vue-clipboard3'
 import {defineComponent, reactive, ref, inject, watch, onMounted} from 'vue'
 import { ElMessage } from 'element-plus'
+import db_dexie from '../utils/db_dexie'
 
 export default defineComponent({
   name: 'TranslateResult',
@@ -59,7 +67,6 @@ export default defineComponent({
         value:'google',label: '谷歌翻译'
       },
     ]
-
     const copy_message = ref('复制翻译结果')
 
     watch(translate_text, (newValue, oldValue) => {
@@ -135,7 +142,7 @@ export default defineComponent({
     let targetSourceLng = ref('en')
     let select_translate_engine = ref('google')
     let select_translate_lng_options = ref(select_translate_language_google)
-    function changeEngine(val){
+    function changeEngine(val: string){
       if(val === 'baidu'){
         select_translate_lng_options.value = select_translate_language_baidu
         translateTextBaidu()
@@ -184,8 +191,17 @@ export default defineComponent({
       })
     }
 
-    function collect(){
+    function onResize({ width, height }) {
+    }
 
+    function collect(){
+      db_dexie.tranlate_log.add({
+        date: new Date(),tranlate_text: translate_text.value,translate_target: targetSourceLng.value,translate_result: translate_result.value
+      })
+      ElMessage({
+        message: '收藏成功',
+        type: 'success',
+      })
     }
 
     function removeThis(){

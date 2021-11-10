@@ -38,13 +38,37 @@
         </div>
       </el-col>
     </el-row>
+    <el-drawer
+        v-model="drawer"
+        :direction="direction"
+        :before-close="handleClose"
+        size="50%"
+        :show-close="false"
+        :with-header="false"
+    >
+      <el-table :data="tableData" style="width: 100%" height="100%"
+        :row-style="{fontSize: '12px'}"
+        :header-row-style="{fontSize: '12px'}"
+      >
+        <el-table-column prop="date" label="翻译时间">
+          <template #default="scope">
+            {{dateFtt('yyyy-MM-dd hh:mm:ss',scope.row.date) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="tranlate_text" label="翻译文本"/>
+        <el-table-column prop="translate_result" label="翻译结果" />
+        <el-table-column prop="translate_target" label="翻译语言" />
+      </el-table>
+    </el-drawer>
   </div>
 </template>
 
 <script lang="ts">
 import { CirclePlus,CircleClose } from '@element-plus/icons'
 import TranslateResult from './TranslateResult.vue'
-import {defineComponent,reactive,ref,provide} from 'vue'
+import {defineComponent, reactive, ref, provide, onMounted,nextTick} from 'vue'
+const { ipcRenderer } = require( 'electron')
+import db_dexie from '../utils/db_dexie'
 export default defineComponent({
   name: 'Translate',
   components: {
@@ -55,13 +79,46 @@ export default defineComponent({
     let translateText = ref('')
     let translateResult = ref('')
     let select_translate_engine = ref('')
+    const tableData = ref([])
+    const drawer = ref(false)
+    const direction = ref('rtl')
     let translateResultList = ref([{
       id: new Date().getTime().toString(),
       text: '翻译框'
     }])
+    onMounted( () => {
+      ipcRenderer.on('send-message-to-render-test',(event: any, arg: any)=>{
+        //这里是主进程传过来的消息
+        db_dexie.tranlate_log.reverse().toArray().then(function(result: any) {
+          tableData.value = result
+          drawer.value = true
+        })
+      })
 
+      ipcRenderer.on('send-message-font',(event: any, arg: any)=>{
+        //这里是主进程传过来的消息
+
+      })
+    })
+    function dateFtt(fmt,date) { //author: meizz
+      var o = {
+        "M+" : date.getMonth()+1,                 //月份
+        "d+" : date.getDate(),                    //日
+        "h+" : date.getHours(),                   //小时
+        "m+" : date.getMinutes(),                 //分
+        "s+" : date.getSeconds(),                 //秒
+        "q+" : Math.floor((date.getMonth()+3)/3), //季度
+        "S"  : date.getMilliseconds()             //毫秒
+      };
+      if(/(y+)/.test(fmt))
+        fmt=fmt.replace(RegExp.$1, (date.getFullYear()+"").substr(4 - RegExp.$1.length));
+      for(var k in o)
+        if(new RegExp("("+ k +")").test(fmt))
+          fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
+      return fmt;
+    }
     function exportResult() {
-
+      ipcRenderer.send("compress-image", 'hello');
     }
     function addTranslateResult() {
       translateResultList.value.push(
@@ -71,24 +128,27 @@ export default defineComponent({
           }
       )
     }
-    function removeTran(e) {
+    function removeTran(e: string) {
 
-      let tempArray = []
+      let tempArray: { id: string; text: string; }[] = []
       translateResultList.value.forEach(thisItem => {
         if(thisItem.id !== e){
           tempArray.push(thisItem)
         }
       })
-      console.log(tempArray)
       translateResultList.value = tempArray
     }
     provide('translate_text',translateText)
     return {
       // 这里的属性 和 方法 会合并到 data 函数 和 methods 对象里
+      drawer,
+      direction,
       translateText,
       translateResult,
       select_translate_engine,
       translateResultList,
+      tableData,
+      dateFtt,
       exportResult,
       removeTran,
       addTranslateResult
