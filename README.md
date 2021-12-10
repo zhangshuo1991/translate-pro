@@ -4,4 +4,4 @@
 
 _1.使用 `yarn electron:dev` 就可以运行程序_ <br>
 _2.使用 `yarn app:build` 构建程序安装包_ <br>
-_3.暂时只提供macOS安装，windows可以下载源码进行编译_
+_3.暂时只提供macOS安装，windows可以下载源码进行编译_ 
