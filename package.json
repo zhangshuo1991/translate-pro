@@ -12,12 +12,12 @@
     "electron:pack": "electron-builder --dir",
     "electron:dev": "concurrently -k \"cross-env BROWSER=none yarn dev\" \"yarn electron\"",
     "electron:builder": "electron-builder",
-    "build:for:electron": "vue-tsc --noEmit && cross-env ELECTRON=true vite build",
+    "build:for:electron": " cross-env ELECTRON=true vite build",
     "app:build": "yarn build:for:electron && yarn electron:builder"
   },
   "build": {
     "appId": "com.my-website.my-app",
-    "productName": "MyApp",
+    "productName": "Translate Pro",
     "copyright": "Copyright © 2021 ${author}",
     "mac": {
       "category": "public.app-category.utilities"
@@ -39,9 +39,11 @@
   "dependencies": {
     "@element-plus/icons": "0.0.11",
     "axios": "^0.22.0",
+    "clipboardy": "^3.0.0",
     "dayjs": "^1.10.7",
     "dexie": "^3.0.3",
     "element-plus": "^1.1.0-beta.9",
+    "lodash": "^4.17.21",
     "vue": "^3.2.6",
     "vue-clipboard3": "^1.0.1",
     "vue-resize-observer": "^2.0.15"

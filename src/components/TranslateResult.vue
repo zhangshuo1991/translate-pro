@@ -70,8 +70,12 @@ export default defineComponent({
     const copy_message = ref('复制翻译结果')
 
     watch(translate_text, (newValue, oldValue) => {
-      translateTextGoogle(newValue)
-      translateTextBaidu()
+      if(select_translate_engine.value === 'baidu') {
+        translateTextBaidu()
+      }
+      if(select_translate_engine.value === 'google') {
+        translateTextGoogle()
+      }
     })
 
     onMounted(() => {
@@ -165,7 +169,7 @@ export default defineComponent({
     function translateTextGoogle() {
 
       if(targetSourceLng.value !== '' && translate_text.value !== ''){
-        axios.get('https://translation.googleapis.com/language/translate/v2?key=AIzaSyA6jJ6imuvgpjNS3EaUoRxqePUAUeldopI&q='+translate_text.value+'&target='+targetSourceLng.value+'').then(res => {
+        axios.get('https://translation.googleapis.com/language/translate/v2?key=AIzaSyA6jJ6imuvgpjNS3EaUoRxqePUAUeldopI&q='+translate_text.value+'&target='+targetSourceLng.value+'',{timeout: 50000,timeoutErrorMessage: '连接超时'}).then(res => {
           if(res.data.data.translations.length>0){
             translate_result.value = res.data.data.translations[0].translatedText
           }

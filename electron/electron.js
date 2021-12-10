@@ -1,6 +1,7 @@
 // electron/electron.js
 const path = require('path');
 const { app, BrowserWindow,Menu,dialog,globalShortcut } = require('electron');
+app.commandLine.appendArgument("--enable-features=Metal");
 
 const isDev = process.env.IS_DEV == "true" ? true : false;
 
@@ -16,31 +17,6 @@ function createWindow() {
             spellcheck: true
         },
     });
-
-    mainWindow.on('focus', () => {
-        // mac下快捷键失效的问题
-        if (process.platform === 'darwin') {
-            let contents = mainWindow.webContents
-            globalShortcut.register('CommandOrControl+C', () => {
-                contents.copy()
-            })
-            globalShortcut.register('CommandOrControl+V', () => {
-                contents.paste()
-            })
-            globalShortcut.register('CommandOrControl+X', () => {
-                contents.cut()
-            })
-            globalShortcut.register('CommandOrControl+A', () => {
-                contents.selectAll()
-            })
-            globalShortcut.register('CommandOrControl+Z', () => {
-                contents.goBack()
-            })
-        }
-    })
-    mainWindow.on('blur', () => {
-        globalShortcut.unregisterAll() // 注销键盘事件
-    })
 
     // and load the index.html of the app.
     // win.loadFile("index.html");
@@ -94,11 +70,15 @@ app.whenReady().then(() => {
                     }
                 },
                 {
-                    label: '字体设置',
-                    accelerator: 'CmdOrCtrl+Shift+I',
+                    label: '设置',
+                    accelerator: 'CmdOrCtrl+Shift+F',
                     click: () => {
                         window.webContents.send('send-message-font', '这是主进程的主动搭讪')
                     }
+                },
+                {
+                    label: 'forceReload',
+                    role: 'forceReload'
                 }
             ]
         }

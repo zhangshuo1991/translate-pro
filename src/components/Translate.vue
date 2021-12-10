@@ -12,6 +12,7 @@
             v-model="translateText"
             :input-style="{fontSize: '16px',fontWeight:'bolder'}"
             :autosize="{ minRows: 4, maxRows: 7}"
+            @focus="testCopy"
         >
         </el-input>
         <div style="text-align: right;margin-top: 15px">
@@ -41,7 +42,6 @@
     <el-drawer
         v-model="drawer"
         :direction="direction"
-        :before-close="handleClose"
         size="50%"
         :show-close="false"
         :with-header="false"
@@ -60,33 +60,68 @@
         <el-table-column prop="translate_target" label="翻译语言" />
       </el-table>
     </el-drawer>
+    <el-dialog v-model="dialogTableVisible" :fullscreen="true">
+      <template #title>
+        <div style="height:30px;line-height: 30px;border-bottom: 1px solid #91949A;width:100%;text-align: left;">字体设置</div>
+      </template>
+      <div>
+        <el-collapse v-model="activeNames" @change="handleChange">
+          <el-collapse-item title="输入设置" name="1">
+            <trans-text-setup></trans-text-setup>
+          </el-collapse-item>
+          <el-collapse-item title="输出设置" name="2">
+            <trans-result-setup></trans-result-setup>
+          </el-collapse-item>
+          <el-collapse-item title="布局设置" name="3">
+            <trans-layout-setup @layout="setLayout"></trans-layout-setup>
+          </el-collapse-item>
+        </el-collapse>
+      </div>
+      <template #footer>
+        <el-button type="primary" @click="saveConfig">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script lang="ts">
 import { CirclePlus,CircleClose } from '@element-plus/icons'
 import TranslateResult from './TranslateResult.vue'
+import TransResultSetup from './setup/TransResultSetup.vue'
+import TransTextSetup from './setup/TransTextSetup.vue'
+import TransLayoutSetup from './setup/TransLayoutSetup.vue'
+
 import {defineComponent, reactive, ref, provide, onMounted,nextTick} from 'vue'
 const { ipcRenderer } = require( 'electron')
 import db_dexie from '../utils/db_dexie'
+import {ElMessage} from "element-plus";
+import clipboardy from 'clipboardy';
+
 export default defineComponent({
   name: 'Translate',
   components: {
     TranslateResult,
+    TransResultSetup,
+    TransTextSetup,
+    TransLayoutSetup,
     CirclePlus,CircleClose
   },
   setup() {
     let translateText = ref('')
     let translateResult = ref('')
     let select_translate_engine = ref('')
+    let layout_setup = ref('oneToMore')
     const tableData = ref([])
     const drawer = ref(false)
+    const dialogTableVisible = ref(false)
     const direction = ref('rtl')
+    const activeNames = ref(['1','2'])
     let translateResultList = ref([{
       id: new Date().getTime().toString(),
       text: '翻译框'
     }])
     onMounted( () => {
+
       ipcRenderer.on('send-message-to-render-test',(event: any, arg: any)=>{
         //这里是主进程传过来的消息
         db_dexie.tranlate_log.reverse().toArray().then(function(result: any) {
@@ -97,7 +132,7 @@ export default defineComponent({
 
       ipcRenderer.on('send-message-font',(event: any, arg: any)=>{
         //这里是主进程传过来的消息
-
+        dialogTableVisible.value = true
       })
     })
     function dateFtt(fmt,date) { //author: meizz
@@ -138,6 +173,28 @@ export default defineComponent({
       })
       translateResultList.value = tempArray
     }
+    const handleChange = (val: any) => {
+      console.log(val)
+    }
+    const setLayout = (e: { value: any }) => {
+      layout_setup.value = e.value
+    }
+    function saveConfig() {
+      db_dexie.layout_config.add({
+        date: new Date(),config:layout_setup.value
+      })
+      ElMessage({
+        message: '保存成功',
+        type: 'success',
+      })
+      dialogTableVisible.value = false
+    }
+
+    async function testCopy() {
+      if(translateText.value === '' || translateText.value === null) {
+        translateText.value=await clipboardy.read()
+      }
+    }
     provide('translate_text',translateText)
     return {
       // 这里的属性 和 方法 会合并到 data 函数 和 methods 对象里
@@ -148,7 +205,13 @@ export default defineComponent({
       select_translate_engine,
       translateResultList,
       tableData,
+      dialogTableVisible,
+      activeNames,
+      testCopy,
+      handleChange,
       dateFtt,
+      saveConfig,
+      setLayout,
       exportResult,
       removeTran,
       addTranslateResult
